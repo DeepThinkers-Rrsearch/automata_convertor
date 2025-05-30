@@ -1,6 +1,6 @@
-streamlit==1.26.0
-torch==2.7.0
-numpy==1.24.3
-google-generativeai==0.3.1
-matplotlib==3.7.2
-pandas==2.0.3 
+streamlit
+torch
+numpy
+google-generativeai
+matplotlib
+pandas
