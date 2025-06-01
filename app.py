@@ -1,16 +1,23 @@
 import os
 import streamlit as st
 import google.generativeai as genai
+
+
 from utils.dfa_minimization import load_dfa_minimization_model, predict_dfa_minimization
 from utils.regex_to_epsilon_nfa import load_regex_to_e_nfa_model,predict_regex_to_e_nfa
 from utils.nfa_to_dfa import load_nfa_to_dfa_model,predict_nfa_to_dfa
+from utils.graphviz.graphviz_e_nfa import epsilon_nfa_to_dot
+
+
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
+
 
 st.set_page_config(
     page_title='Automata Conversions',
     page_icon=':robot_face:',
     layout='wide'
 )
+
 
 # ─── 1️⃣ Define available models as configuration objects ─────────────────────
 models_root = './models'
@@ -81,8 +88,16 @@ if st.button("Convert", type="primary"):
             model,stoi,itos = load_model(selected_model['name'])
             
             result = None
+            graph =  None
+            png_bytes = None
             if selected_model['name'] == "Regex-to-ε-NFA":
                 result = predict_regex_to_e_nfa(user_input,model,stoi,itos)
+                graph =epsilon_nfa_to_dot(result)
+                png_bytes = graph.pipe(format="png")
+                # output_path = graph.render("outputs/epsilon_nfa_diagram", cleanup=True)
+                
+                
+                
             elif selected_model['name'] == "DFA-Minimization":
                 result = predict_dfa_minimization(model,user_input)
             elif selected_model['name'] == "NFA-to-DFA":
@@ -91,6 +106,19 @@ if st.button("Convert", type="primary"):
             # Display result
             st.subheader("Conversion Result:")
             st.code(result, language="text")
+            st.subheader("Generated ε-NFA")
+            st.graphviz_chart(graph.source)
+
+            if png_bytes:
+                st.subheader("Download Diagram as PNG")
+                st.download_button(
+                    label="⬇️ Download ε-NFA (PNG)",
+                    data=png_bytes,
+                    file_name="epsilon_nfa.png",
+                    mime="image/png"
+                )
+            
+
 
 # ─── 5️⃣ Additional UI sections (optional) ─────────────────────────────────────
 with st.expander("Model Information"):
