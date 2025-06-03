@@ -7,6 +7,8 @@ from utils.dfa_minimization import load_dfa_minimization_model, predict_dfa_mini
 from utils.regex_to_epsilon_nfa import load_regex_to_e_nfa_model,predict_regex_to_e_nfa
 from utils.nfa_to_dfa import load_nfa_to_dfa_model,predict_nfa_to_dfa
 from utils.graphviz.graphviz_regex_to_e_nfa import epsilon_nfa_to_dot
+from utils.graphviz.graphviz_dfa import dfa_output_to_dot
+
 
 
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
@@ -102,6 +104,8 @@ if st.button("Convert", type="primary"):
                 result = predict_dfa_minimization(model,user_input)
             elif selected_model['name'] == "NFA-to-DFA":
                 result = predict_nfa_to_dfa(model,user_input)
+                graph =dfa_output_to_dot(result)
+                png_bytes = graph.pipe(format="png")
             
             # Display result
             st.subheader("Conversion Result:")
