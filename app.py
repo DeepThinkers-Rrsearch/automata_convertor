@@ -102,7 +102,7 @@ if st.button("Convert", type="primary"):
                 
             elif selected_model['name'] == "DFA-Minimization":
                 result = predict_dfa_minimization(model,user_input)
-            elif selected_model['name'] == "NFA-to-DFA":
+            elif selected_model['name'] == "e_NFA-to-DFA":
                 result = predict_e_nfa_to_dfa(model,user_input)
                 graph =dfa_output_to_dot(result)
                 png_bytes = graph.pipe(format="png")
