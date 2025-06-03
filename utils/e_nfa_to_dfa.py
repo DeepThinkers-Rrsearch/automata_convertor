@@ -11,7 +11,7 @@ DROPOUT_RATE = 0.1
 
 MAX_SEQ_LEN = 500
 
-tokenizer_path = "models/nfa_to_dfa/nfa_to_dfa_tokenizer.pkl"
+tokenizer_path = "models/e_nfa_to_dfa/e_nfa_to_dfa_tokenizer.pkl"
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -71,7 +71,7 @@ class Seq2SeqTransformer(nn.Module):
 
         return self.fc_out(output)
 
-def load_nfa_to_dfa_model(model_path):
+def load_e_nfa_to_dfa_model(model_path):
     tokenizer = load_tokenizer(tokenizer_path)
     vocab_size = len(tokenizer['stoi'])
 
@@ -91,7 +91,7 @@ def tokenize_sequence(seq, tokenizer):
     padded = token_ids[:MAX_SEQ_LEN] + [tokenizer['stoi'][tokenizer['pad_token']]] * (MAX_SEQ_LEN - len(token_ids))
     return padded
 
-def predict_nfa_to_dfa(model, input_str):
+def predict_e_nfa_to_dfa(model, input_str):
     tokenizer = load_tokenizer(tokenizer_path)
     stoi, itos = tokenizer['stoi'], tokenizer['itos']
     pad_idx = stoi[tokenizer['pad_token']]
