@@ -5,7 +5,7 @@ import google.generativeai as genai
 
 from utils.dfa_minimization import load_dfa_minimization_model, predict_dfa_minimization
 from utils.regex_to_epsilon_nfa import load_regex_to_e_nfa_model,predict_regex_to_e_nfa
-from utils.nfa_to_dfa import load_nfa_to_dfa_model,predict_nfa_to_dfa
+from utils.e_nfa_to_dfa import load_e_nfa_to_dfa_model,predict_e_nfa_to_dfa
 from utils.graphviz.graphviz_regex_to_e_nfa import epsilon_nfa_to_dot
 from utils.graphviz.graphviz_dfa import dfa_output_to_dot
 
@@ -26,7 +26,7 @@ models_root = './models'
 models = [
     {"name": "DFA-Minimization", "path": os.path.join(models_root, "dfa_minimization")},
     {"name": "Regex-to-ε-NFA", "path": os.path.join(models_root, "regex_to_e_nfa")},
-    {"name": "NFA-to-DFA", "path": os.path.join(models_root, "nfa_to_dfa")},
+    {"name": "e_NFA-to-DFA", "path": os.path.join(models_root, "e_nfa_to_dfa")},
     # {"name": "PDA", "path": os.path.join(models_root, "pda")},
 ]
 
@@ -58,9 +58,9 @@ def load_model(model_name: str):
     elif model_name == "Regex-to-ε-NFA":
         regex_to_e_nfa_model,stoi, itos = load_regex_to_e_nfa_model("models/regex_to_e_nfa/transformer_regex_to_e_nfa.pt","models/regex_to_e_nfa/regex_to_e_nfa_tokenizer.pkl")
         return regex_to_e_nfa_model,stoi, itos
-    elif model_name == "NFA-to-DFA":
-        nfa_to_dfa_model = load_nfa_to_dfa_model("models/nfa_to_dfa/transformer_model.pt")
-        return nfa_to_dfa_model, None, None
+    elif model_name == "e_NFA-to-DFA":
+        e_nfa_to_dfa_model = load_e_nfa_to_dfa_model("models/e_nfa_to_dfa/transformer_model.pt")
+        return e_nfa_to_dfa_model, None, None
 
     return None  # Replace with actual model
 
@@ -103,7 +103,7 @@ if st.button("Convert", type="primary"):
             elif selected_model['name'] == "DFA-Minimization":
                 result = predict_dfa_minimization(model,user_input)
             elif selected_model['name'] == "NFA-to-DFA":
-                result = predict_nfa_to_dfa(model,user_input)
+                result = predict_e_nfa_to_dfa(model,user_input)
                 graph =dfa_output_to_dot(result)
                 png_bytes = graph.pipe(format="png")
             
