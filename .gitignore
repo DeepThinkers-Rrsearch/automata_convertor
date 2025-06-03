@@ -2,3 +2,4 @@
 /myenv
 /.env
 /utils/__pycache__
+/utils/graphviz/__pycache__

@@ -6,7 +6,7 @@ import google.generativeai as genai
 from utils.dfa_minimization import load_dfa_minimization_model, predict_dfa_minimization
 from utils.regex_to_epsilon_nfa import load_regex_to_e_nfa_model,predict_regex_to_e_nfa
 from utils.nfa_to_dfa import load_nfa_to_dfa_model,predict_nfa_to_dfa
-from utils.graphviz.graphviz_e_nfa import epsilon_nfa_to_dot
+from utils.graphviz.graphviz_regex_to_e_nfa import epsilon_nfa_to_dot
 
 
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 
-# ─── 1️⃣ Define available models as configuration objects ─────────────────────
+# ───  Define available models as configuration objects ─────────────────────
 models_root = './models'
 models = [
     {"name": "DFA-Minimization", "path": os.path.join(models_root, "dfa_minimization")},
@@ -40,7 +40,7 @@ if not valid_models:
     st.error("No valid models available.")
     st.stop()
 
-# ─── 2️⃣ Sidebar dropdown with models ──────────────────────────────────────────
+# ─── Sidebar dropdown with models ──────────────────────────────────────────
 model_names = [m["name"] for m in valid_models]
 selected_name = st.sidebar.selectbox('Choose Converter', model_names, index=0)
 
@@ -63,7 +63,7 @@ def load_model(model_name: str):
     return None  # Replace with actual model
 
 
-# ─── 4️⃣ Main UI ───────────────────────────────────────────────────────────────
+# ───  Main UI ───────────────────────────────────────────────────────────────
 st.title("Automata Conversions")
 
 # Display current model info
@@ -120,7 +120,7 @@ if st.button("Convert", type="primary"):
             
 
 
-# ─── 5️⃣ Additional UI sections (optional) ─────────────────────────────────────
+# ───  Additional UI sections (optional) ─────────────────────────────────────
 with st.expander("Model Information"):
     st.write(f"**Model Name:** {selected_model['name']}")
     st.write(f"**Model Path:** {selected_model['path']}")
