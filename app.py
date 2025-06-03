@@ -107,7 +107,7 @@ if st.button("Convert", type="primary"):
             st.subheader("Conversion Result:")
             st.code(result, language="text")
             st.subheader("Generated ε-NFA")
-            st.graphviz_chart(graph.source)
+            # st.graphviz_chart(graph.source)
 
             if png_bytes:
                 st.subheader("Download Diagram as PNG")
