@@ -9,10 +9,8 @@ from utils.dfa_minimization import load_dfa_minimization_model, predict_dfa_mini
 from utils.regex_to_epsilon_nfa import load_regex_to_e_nfa_model,predict_regex_to_e_nfa
 from utils.e_nfa_to_dfa import load_e_nfa_to_dfa_model,predict_e_nfa_to_dfa
 from utils.graphviz.graphviz_regex_to_e_nfa import epsilon_nfa_to_dot
-
-from utils.genai import get_genai_response
 from utils.graphviz.graphviz_dfa import dfa_output_to_dot
-genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
+
 
 
 st.set_page_config(
