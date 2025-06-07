@@ -27,24 +27,24 @@ You can use either Conda or Python's built-in venv. Choose one of the options be
 
 ```bash
 # Create a new conda environment
-conda create --name /fyp-env python=3.10
+conda create --name /myenv python=3.10
 
 # Activate the environment
-conda activate /fyp-env
+conda activate /myenv
 ```
 
 #### Option B: Using Python venv
 
 ```bash
 # Create a virtual environment
-python -m venv fyp-env
+python -m venv myenv
 
 # Activate the environment
 # On Windows:
-fyp-env\Scripts\activate
+myenv\Scripts\activate
 
 # On macOS/Linux:
-source fyp-env/bin/activate
+source myenv/bin/activate
 ```
 
 ### 3. Environment Variables (.env file)
