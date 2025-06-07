@@ -96,3 +96,7 @@ deactivate
 - Always activate your virtual environment before working on the project
 - Keep the `requirements.txt` file updated if you add new dependencies
 - Consider using `pip freeze > requirements.txt` to update the requirements file with exact versions
+
+## Chat Model Tutorial Link
+
+- https://python.langchain.com/docs/tutorials/chatbot/

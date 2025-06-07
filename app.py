@@ -1,16 +1,17 @@
 import os
 import streamlit as st
-import google.generativeai as genai
+from PIL import Image
+import io
 
 
-from utils.dfa_minimization import load_dfa_minimization_model, predict_dfa_minimization
+
+from utils.dfa_minimization import load_dfa_minimization_model, predict_dfa_minimization,load_tokenizer
 from utils.regex_to_epsilon_nfa import load_regex_to_e_nfa_model,predict_regex_to_e_nfa
 from utils.e_nfa_to_dfa import load_e_nfa_to_dfa_model,predict_e_nfa_to_dfa
 from utils.graphviz.graphviz_regex_to_e_nfa import epsilon_nfa_to_dot
+
+from utils.genai import get_genai_response
 from utils.graphviz.graphviz_dfa import dfa_output_to_dot
-
-
-
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
 
 
@@ -20,8 +21,29 @@ st.set_page_config(
     layout='wide'
 )
 
+# ----------------------- Prompts -------------------------------------------
+
+dfa_minimization_extraction_prompt = '''
+
+Here in this process you are a agent that extract an DFA transitons from the given input. You need to extract each and every relationships/transitions as it is. You should not miss any information. This is the sample outpust shouls looks like.
+
+"A: a-->A, b-->A; B: a-->B, b-->A; in:A; fi:A"
+
+Outpus is an string. Here Capital letters denotes the State names. Letter in double rounded circle is the final state. If any state has a arrow started with a dot, that is the initial state. 
+
+In above example, "in" denotes the initial states, "fi" represent final states.
+
+If there is more than one final states, those should be denoted using commas. As a example, "fi: D,E".
+
+Hint: for initial state, you can see a long arrow started with a dot.
+
+Also no preembles in the output. Just the required output string
+
+
+'''
 
 # ───  Define available models as configuration objects ─────────────────────
+
 models_root = './models'
 models = [
     {"name": "DFA-Minimization", "path": os.path.join(models_root, "dfa_minimization")},
@@ -53,7 +75,7 @@ selected_model = next(m for m in valid_models if m["name"] == selected_name)
 def load_model(model_name: str):
 
     if model_name == "DFA-Minimization":
-        dfa_minimization_model =load_dfa_minimization_model("models/dfa_minimization/dfa_transformer.pt","models/dfa_minimization/dfa_minimizer_tokenizer.pkl")
+        dfa_minimization_model =load_dfa_minimization_model()
         return dfa_minimization_model, None, None
     elif model_name == "Regex-to-ε-NFA":
         regex_to_e_nfa_model,stoi, itos = load_regex_to_e_nfa_model("models/regex_to_e_nfa/transformer_regex_to_e_nfa.pt","models/regex_to_e_nfa/regex_to_e_nfa_tokenizer.pkl")
@@ -79,14 +101,24 @@ input_placeholder = {
     # Add more placeholders for other models
 }.get(selected_model['name'], "Enter your input here")
 
+input_img_bytes = None
+img_input = None
+
+if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "NFA-to-DFA":
+    img_input =  st.file_uploader("Upload image of DFA or NFA",type=['png','jpg','jpeg','svg'])
+    # if img_input:
+    #     input_img_bytes = img_input.read()
+
 user_input = st.text_area("Input", placeholder=input_placeholder)
+
+
 
 if st.button("Convert", type="primary"):
     if not user_input.strip():
         st.warning("Please enter something to convert.")
     else:
         with st.spinner(f"Converting using {selected_model['name']}..."):
-            # TODO: Load model (you might want to cache this)
+        
             model,stoi,itos = load_model(selected_model['name'])
             
             result = None
@@ -106,10 +138,16 @@ if st.button("Convert", type="primary"):
                 result = predict_e_nfa_to_dfa(model,user_input)
                 graph =dfa_output_to_dot(result)
                 png_bytes = graph.pipe(format="png")
+
             
             # Display result
+            # if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "NFA-to-DFA":
+                # pil_img = Image.open(io.BytesIO(input_img_bytes))
+                # llm_response = get_genai_response(user_input,pil_img, dfa_minimization_extraction_prompt)
+                # st.write(llm_response)
             st.subheader("Conversion Result:")
             st.code(result, language="text")
+
             st.subheader("Generated ε-NFA")
             st.graphviz_chart(graph.source)
 
