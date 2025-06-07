@@ -4,3 +4,6 @@ numpy
 google-generativeai
 matplotlib
 pandas
+langchain-core 
+langgraph
+graphviz
