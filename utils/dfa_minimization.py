@@ -6,12 +6,12 @@ import torch.nn as nn
 # device & hyper-parameters must match what you used at training
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 MAX_SEQ_LEN = 200
-EMBED_DIM = 256
-NUM_HEADS = 8
-NUM_ENCODER_LAYERS = 6
-NUM_DECODER_LAYERS = 6
-DIM_FEEDFORWARD = 1024
-DROPOUT = 0.3
+EMBED_DIM = 128
+NUM_HEADS = 4
+NUM_ENCODER_LAYERS = 4
+NUM_DECODER_LAYERS = 4
+DIM_FEEDFORWARD = 512
+DROPOUT = 0.2
 
 class RemappingUnpickler(pickle.Unpickler):
 
@@ -110,28 +110,43 @@ def load_dfa_minimization_model(model_path,tokenizer_path):
     model.eval()
     return model
 
-def predict_dfa_minimization(model: Seq2SeqTransformer,
-            src_str: str,
-            max_len: int = MAX_SEQ_LEN) -> str:
-    """
-    Given a source string, returns the model’s decoded output string.
-    Uses greedy one‐token‐at‐a‐time decoding until <eos> or max_len.
-    """
-    # encode source
+# def predict_dfa_minimization(model: Seq2SeqTransformer,
+#             src_str: str,
+#             max_len: int = MAX_SEQ_LEN) -> str:
+#     """
+#     Given a source string, returns the model’s decoded output string.
+#     Uses greedy one‐token‐at‐a‐time decoding until <eos> or max_len.
+#     """
+#     # encode source
+#     tokenizer  = load_tokenizer("models/dfa_minimization/dfa_minimizer_tokenizer.pkl")
+#     src_ids = tokenizer.encode(src_str, max_len, add_special=True)
+#     src = torch.tensor([src_ids], dtype=torch.long, device=DEVICE)
+
+#     # start target with <sos>
+#     tgt_ids = [tokenizer.stoi['<sos>']]
+#     with torch.no_grad():
+#         for _ in range(max_len):
+#             tgt = torch.tensor([tgt_ids], dtype=torch.long, device=DEVICE)
+#             out = model(src, tgt)                   # (1, seq_len, vocab_size)
+#             next_id = out.argmax(-1)[0, -1].item() # pick highest‐prob token
+#             if next_id == tokenizer.stoi['<eos>']:
+#                 break
+#             tgt_ids.append(next_id)
+
+#     # decode (skips <sos> and stops at <eos>)
+#     return tokenizer.decode(tgt_ids)
+
+def predict_dfa_minimization(model, src_str, max_len=MAX_SEQ_LEN):
+    model.eval()
     tokenizer  = load_tokenizer("models/dfa_minimization/dfa_minimizer_tokenizer.pkl")
-    src_ids = tokenizer.encode(src_str, max_len, add_special=True)
-    src = torch.tensor([src_ids], dtype=torch.long, device=DEVICE)
-
-    # start target with <sos>
-    tgt_ids = [tokenizer.stoi['<sos>']]
-    for _ in range(max_len):
-        tgt = torch.tensor([tgt_ids], dtype=torch.long, device=DEVICE)
-        out = model(src, tgt)                   # (1, seq_len, vocab_size)
-        next_id = out.argmax(-1)[0, -1].item() # pick highest‐prob token
-        if next_id == tokenizer.stoi['<eos>']:
+    src_ids = torch.tensor(tokenizer.encode(src_str, max_len, add_special=False)).unsqueeze(0).to(DEVICE)
+    tgt_ids = torch.full((1, max_len), tokenizer.stoi['<pad>'], dtype=torch.long).to(DEVICE)
+    tgt_ids[0,0] = tokenizer.stoi['<sos>']
+    for i in range(1, max_len):
+        with torch.no_grad():
+            out = model(src_ids, tgt_ids[:,:i])
+        next_token = out.argmax(-1)[0, i-1].item()
+        tgt_ids[0,i] = next_token
+        if next_token == tokenizer.stoi['<eos>']:
             break
-        tgt_ids.append(next_id)
-
-    # decode (skips <sos> and stops at <eos>)
-    return tokenizer.decode(tgt_ids)
-
+    return tokenizer.decode(tgt_ids[0].cpu().tolist())
