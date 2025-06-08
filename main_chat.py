@@ -87,38 +87,38 @@ def main():
     if prompt := st.chat_input("Type your message here..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
 
-    with st.chat_message("user"):
-        st.markdown(prompt)
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            try:
-                # Create human message and invoke the app
-                human_message = HumanMessage(content=prompt)
-                output = st.session_state.app.invoke(
-                    {"messages": [human_message]}, 
-                    st.session_state.config
-                )
-                    
-                # Get assistant response
-                assistant_response = output["messages"][-1].content
-                    
-                    # Display assistant response
-                st.markdown(assistant_response)
-                    
-                    # Add assistant response to chat history
-                st.session_state.messages.append({
-                        "role": "assistant", 
-                        "content": assistant_response
-                    })
-                    
-            except Exception as e:
-                    error_msg = f"Error: {str(e)}"
-                    st.error(error_msg)
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                try:
+                    # Create human message and invoke the app
+                    human_message = HumanMessage(content=prompt)
+                    output = st.session_state.app.invoke(
+                        {"messages": [human_message]}, 
+                        st.session_state.config
+                    )
+                        
+                    # Get assistant response
+                    assistant_response = output["messages"][-1].content
+                        
+                        # Display assistant response
+                    st.markdown(assistant_response)
+                        
+                        # Add assistant response to chat history
                     st.session_state.messages.append({
-                        "role": "assistant", 
-                        "content": error_msg
-                    })
+                            "role": "assistant", 
+                            "content": assistant_response
+                        })
+                        
+                except Exception as e:
+                        error_msg = f"Error: {str(e)}"
+                        st.error(error_msg)
+                        st.session_state.messages.append({
+                            "role": "assistant", 
+                            "content": error_msg
+                        })
 
 if __name__ == "__main__":
     main()
@@ -128,24 +128,3 @@ if __name__ == "__main__":
 
 
 
-
-
-
-
-
-
-
-
-
-first_input = [HumanMessage(content="I am chanaka Prasanna")]
-first_output = app.invoke({"messages": first_input}, config)
-print("Assistant:", first_output["messages"][-1].content)
-
-# 6) Second user turn (memory should kick in)
-second_input = [HumanMessage(content="And what about my name now?")]
-second_output = app.invoke({"messages": second_input}, config)
-print("Assistant:", second_output["messages"][-1].content)
-
-# # 7) Inspect saved conversation (if you want)
-# history = memory.get_memory("abc123")
-# print("Saved history:", history)
