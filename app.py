@@ -9,6 +9,7 @@ from utils.dfa_minimization import load_dfa_minimization_model, predict_dfa_mini
 from utils.regex_to_epsilon_nfa import load_regex_to_e_nfa_model,predict_regex_to_e_nfa
 from utils.e_nfa_to_dfa import load_e_nfa_to_dfa_model,predict_e_nfa_to_dfa
 from utils.graphviz.graphviz_regex_to_e_nfa import epsilon_nfa_to_dot
+from utils.graphviz.graphviz_minimized_dfa import minimized_dfa_to_dot
 from utils.graphviz.graphviz_dfa import dfa_output_to_dot
 
 
@@ -73,7 +74,7 @@ selected_model = next(m for m in valid_models if m["name"] == selected_name)
 def load_model(model_name: str):
 
     if model_name == "DFA-Minimization":
-        dfa_minimization_model =load_dfa_minimization_model()
+        dfa_minimization_model =load_dfa_minimization_model("models/dfa_minimization/dfa_minimizer_transformer.pt","models/dfa_minimization/dfa_minimizer_tokenizer.pkl")
         return dfa_minimization_model, None, None
     elif model_name == "Regex-to-ε-NFA":
         regex_to_e_nfa_model,stoi, itos = load_regex_to_e_nfa_model("models/regex_to_e_nfa/transformer_regex_to_e_nfa.pt","models/regex_to_e_nfa/regex_to_e_nfa_tokenizer.pkl")
@@ -132,10 +133,14 @@ if st.button("Convert", type="primary"):
                 
             elif selected_model['name'] == "DFA-Minimization":
                 result = predict_dfa_minimization(model,user_input)
+                graph = minimized_dfa_to_dot(result)
+                png_bytes = graph.pipe(format="png")
+
             elif selected_model['name'] == "e_NFA-to-DFA":
                 result = predict_e_nfa_to_dfa(model,user_input)
                 graph =dfa_output_to_dot(result)
                 png_bytes = graph.pipe(format="png")
+
 
             
             # Display result
@@ -145,16 +150,15 @@ if st.button("Convert", type="primary"):
                 # st.write(llm_response)
             st.subheader("Conversion Result:")
             st.code(result, language="text")
-
-            st.subheader("Generated ε-NFA")
+            st.subheader("Generated Diagram:")
             st.graphviz_chart(graph.source)
 
             if png_bytes:
                 st.subheader("Download Diagram as PNG")
                 st.download_button(
-                    label="⬇️ Download ε-NFA (PNG)",
+                    label="⬇️ Download (PNG)",
                     data=png_bytes,
-                    file_name="epsilon_nfa.png",
+                    file_name="diagram.png",
                     mime="image/png"
                 )
             
