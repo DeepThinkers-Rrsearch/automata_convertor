@@ -51,15 +51,7 @@ def load_conversation_history(app,config):
     return []
 
 
-def main():
-    st.set_page_config(
-            page_title='LLM Chat Interface with Memory',
-            page_icon=':robot_face:',
-            layout='wide'
-    )
-
-    st.title('LLM Chat Interface with Memory')
-    st.markdown("Chat with Gemini 2.0 Flash using LangGraph")
+def chat_ui():
 
     if 'app' not in st.session_state:
         st.session_state.app,st.session_state.config = setup_llm()
@@ -121,7 +113,7 @@ def main():
                         })
 
 if __name__ == "__main__":
-    main()
+    chat_ui()
 
 
 
