@@ -4,14 +4,17 @@ import re
 def dfa_output_to_dot(model_output: str):
     # Parse the sections
     parts = {}
+    model_output = model_output.strip()
+    if model_output.startswith('"') and model_output.endswith('"'):
+        model_output = model_output[1:-1]
+
     for section in model_output.split(';'):
-        section = section.strip()
         if not section:
             continue
         key, value = section.split(':', 1)
         parts[key.strip()] = value.strip()
 
-    # Initial state(s)
+    # Initial state
     initial_states = re.findall(r'\{(.*?)\}', parts.get('In', ''))
     initial_state = initial_states[0] if initial_states else None
 
