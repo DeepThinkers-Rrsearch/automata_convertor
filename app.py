@@ -6,8 +6,10 @@ import google.generativeai as genai
 from utils.dfa_minimization import load_dfa_minimization_model, predict_dfa_minimization
 from utils.regex_to_epsilon_nfa import load_regex_to_e_nfa_model,predict_regex_to_e_nfa
 from utils.e_nfa_to_dfa import load_e_nfa_to_dfa_model,predict_e_nfa_to_dfa
+from utils.push_down_automata import load_PDA_model,predict_PDA_transitions
 from utils.graphviz.graphviz_regex_to_e_nfa import epsilon_nfa_to_dot
 from utils.graphviz.graphviz_dfa import dfa_output_to_dot
+from utils.graphviz.graphviz_pda import pda_output_to_dot
 
 
 
@@ -27,7 +29,7 @@ models = [
     {"name": "DFA-Minimization", "path": os.path.join(models_root, "dfa_minimization")},
     {"name": "Regex-to-ε-NFA", "path": os.path.join(models_root, "regex_to_e_nfa")},
     {"name": "e_NFA-to-DFA", "path": os.path.join(models_root, "e_nfa_to_dfa")},
-    # {"name": "PDA", "path": os.path.join(models_root, "pda")},
+    {"name": "PDA", "path": os.path.join(models_root, "pda")},
 ]
 
 # Validate that model paths exist
@@ -61,6 +63,9 @@ def load_model(model_name: str):
     elif model_name == "e_NFA-to-DFA":
         e_nfa_to_dfa_model = load_e_nfa_to_dfa_model("models/e_nfa_to_dfa/transformer_model.pt")
         return e_nfa_to_dfa_model, None, None
+    elif model_name == "PDA":
+        pda_model = load_PDA_model("models/pda/pda.pth")
+        return pda_model, None, None
 
     return None  # Replace with actual model
 
@@ -76,6 +81,7 @@ st.write(f"Model Path: `{selected_model['path']}`")
 input_placeholder = {
     "DFA-Minimization": "Enter your DFA description (states, transitions, etc.)",
     "Regex-to-ε-NFA": "Enter your regular expression",
+    "PDA": "Enter your language example string...\nEg:- aabb (a^nb^n)"
     # Add more placeholders for other models
 }.get(selected_model['name'], "Enter your input here")
 
@@ -105,6 +111,10 @@ if st.button("Convert", type="primary"):
             elif selected_model['name'] == "e_NFA-to-DFA":
                 result = predict_e_nfa_to_dfa(model,user_input)
                 graph =dfa_output_to_dot(result)
+                png_bytes = graph.pipe(format="png")
+            elif selected_model['name'] == "PDA":
+                result = predict_PDA_transitions(model,user_input)
+                graph =pda_output_to_dot(result)
                 png_bytes = graph.pipe(format="png")
             
             # Display result
