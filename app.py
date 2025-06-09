@@ -1,22 +1,20 @@
 import os
 import streamlit as st
-from PIL import Image
-import io
-
-
-
 from utils.dfa_minimization import load_dfa_minimization_model, predict_dfa_minimization,load_tokenizer
 from utils.regex_to_epsilon_nfa import load_regex_to_e_nfa_model,predict_regex_to_e_nfa
 from utils.e_nfa_to_dfa import load_e_nfa_to_dfa_model,predict_e_nfa_to_dfa
 from utils.graphviz.graphviz_regex_to_e_nfa import epsilon_nfa_to_dot
 from utils.graphviz.graphviz_minimized_dfa import minimized_dfa_to_dot
 from utils.graphviz.graphviz_dfa import dfa_output_to_dot
+from llm import setup_llm
+from conversations import load_conversation_history
+from langchain_core.messages import HumanMessage
 
 
 
 st.set_page_config(
     page_title='Automata Conversions',
-    page_icon=':robot_face:',
+    page_icon='⚙️',
     layout='wide'
 )
 
@@ -89,9 +87,6 @@ def load_model(model_name: str):
 # ───  Main UI ───────────────────────────────────────────────────────────────
 st.title("Automata Conversions")
 
-# Display current model info
-st.info(f"Selected Model: **{selected_model['name']}**")
-st.write(f"Model Path: `{selected_model['path']}`")
 
 # Input area with dynamic placeholder based on selected model
 input_placeholder = {
@@ -110,6 +105,8 @@ if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "NF
 
 user_input = st.text_area("Input", placeholder=input_placeholder)
 
+if selected_model['name'] == "Regex-to-ε-NFA":
+    st.session_state.input_regex = user_input
 
 
 if st.button("Convert", type="primary"):
@@ -125,6 +122,7 @@ if st.button("Convert", type="primary"):
             png_bytes = None
             if selected_model['name'] == "Regex-to-ε-NFA":
                 result = predict_regex_to_e_nfa(user_input,model,stoi,itos)
+                st.session_state.regex_to_e_nfa_transition = result
                 graph =epsilon_nfa_to_dot(result)
                 png_bytes = graph.pipe(format="png")
                 # output_path = graph.render("outputs/epsilon_nfa_diagram", cleanup=True)
@@ -163,14 +161,69 @@ if st.button("Convert", type="primary"):
                 )
             
 
+if selected_model['name'] == "Regex-to-ε-NFA":
+    if 'app' not in st.session_state:
+        st.session_state.app,st.session_state.config = setup_llm()
 
-# ───  Additional UI sections (optional) ─────────────────────────────────────
-with st.expander("Model Information"):
-    st.write(f"**Model Name:** {selected_model['name']}")
-    st.write(f"**Model Path:** {selected_model['path']}")
-    # TODO: Add more model-specific information here
+    if "messages" not in st.session_state:
+        st.session_state.messages = load_conversation_history(
+            st.session_state.app,
+            st.session_state.config
+        )
+    for message in st.session_state.messages:
+        with st.chat_message(message['role']):
+            st.markdown(message['content'])
+    
+    if prompt := st.chat_input("Type your message here..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
 
-# TODO: Add any model-specific configuration options in sidebar
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                try:
+                    # Create human message and invoke the app
+                    human_message = HumanMessage(content=prompt)
+                    output = st.session_state.app.invoke(
+                        {"messages": [human_message]}, 
+                        st.session_state.config
+                    )
+                        
+                    # Get assistant response
+                    assistant_response = output["messages"][-1].content
+                        
+                        # Display assistant response
+                    st.markdown(assistant_response)
+                        
+                        # Add assistant response to chat history
+                    st.session_state.messages.append({
+                            "role": "assistant", 
+                            "content": assistant_response
+                        })
+                        
+                except Exception as e:
+                        error_msg = f"Error: {str(e)}"
+                        st.error(error_msg)
+                        st.session_state.messages.append({
+                            "role": "assistant", 
+                            "content": error_msg
+                        })
+
+
 st.sidebar.markdown("---")
-st.sidebar.subheader("Model Settings")
-# TODO: Add model-specific settings/parameters here
+st.sidebar.subheader("Model Information")
+st.sidebar.info(f"Selected Model: **{selected_model['name']}**")
+st.sidebar.write(f"Model Path: `{selected_model['path']}`")
+
+st.sidebar.markdown("---")
+st.sidebar.subheader('Controls')
+if st.sidebar.button("Clear Chat History",type="secondary"):
+    if selected_model['name'] == "Regex-to-ε-NFA":
+        st.session_state.messages = []
+    # st.rerun()
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Thread ID:** abc123")
+if selected_model['name'] == "Regex-to-ε-NFA":
+    st.sidebar.markdown(f"**Messages in conversation:** {len(st.session_state.messages)}")
