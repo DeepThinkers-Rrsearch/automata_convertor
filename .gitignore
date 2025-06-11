@@ -3,3 +3,5 @@
 /.env
 /utils/__pycache__
 /utils/graphviz/__pycache__
+/fyp-env
+**/__pycache__/
