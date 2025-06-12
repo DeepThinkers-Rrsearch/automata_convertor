@@ -221,7 +221,7 @@ st.sidebar.subheader('Controls')
 if st.sidebar.button("Clear Chat History",type="secondary"):
     if selected_model['name'] == "Regex-to-ε-NFA":
         st.session_state.messages = []
-    # st.rerun()
+        raise st.experimental_rerun()
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Thread ID:** abc123")
