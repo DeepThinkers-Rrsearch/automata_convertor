@@ -15,7 +15,7 @@ from langchain_core.messages import HumanMessage
 
 
 st.set_page_config(
-    page_title='Automata Conversions',
+    page_title='State Forge',
     page_icon='⚙️',
     layout='wide'
 )
@@ -89,7 +89,18 @@ def load_model(model_name: str):
     return None  # Replace with actual model
 
 
-# ───  Main UI ───────────────────────────────────────────────────────────────
+def clear_on_convert():
+    if st.session_state.conversion_result:
+        st.session_state.conversion_result = None
+        st.session_state.conversion_graph = None
+        st.session_state.diagram_png_bytes = None
+        st.session_state.input_regex = None
+        st.session_state.regex_to_e_nfa_transition = None
+        st.session_state.regex_to_e_nfa_used  = False
+
+
+st.session_state.pressed_once = False
+# -------------------------------  Main UI ------------------------------
 st.title("Automata Conversions")
 
 
@@ -119,22 +130,24 @@ if st.button("Convert", type="primary"):
     if not user_input.strip():
         st.warning("Please enter something to convert.")
     else:
+        if st.session_state.pressed_once:
+            clear_on_convert()
+            
+
         with st.spinner(f"Converting using {selected_model['name']}..."):
-        
+            st.session_state.pressed_once = True
             model,stoi,itos = load_model(selected_model['name'])
             
             result = None
             graph =  None
             png_bytes = None
+
             if selected_model['name'] == "Regex-to-ε-NFA":
                 result = predict_regex_to_e_nfa(user_input,model,stoi,itos)
                 st.session_state.regex_to_e_nfa_transition = result
                 graph =epsilon_nfa_to_dot(result)
                 png_bytes = graph.pipe(format="png")
-                # output_path = graph.render("outputs/epsilon_nfa_diagram", cleanup=True)
-                
-                
-                
+
             elif selected_model['name'] == "DFA-Minimization":
                 result = predict_dfa_minimization(model,user_input)
                 graph = minimized_dfa_to_dot(result)
@@ -144,29 +157,30 @@ if st.button("Convert", type="primary"):
                 result = predict_e_nfa_to_dfa(model,user_input)
                 graph =dfa_output_to_dot(result)
                 png_bytes = graph.pipe(format="png")
+
             elif selected_model['name'] == "PDA":
                 result = predict_PDA_transitions(model,user_input)
                 graph =pda_output_to_dot(result)
                 png_bytes = graph.pipe(format="png")
             
-            # Display result
-            # if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "NFA-to-DFA":
-                # pil_img = Image.open(io.BytesIO(input_img_bytes))
-                # llm_response = get_genai_response(user_input,pil_img, dfa_minimization_extraction_prompt)
-                # st.write(llm_response)
-            st.subheader("Conversion Result:")
-            st.code(result, language="text")
-            st.subheader("Generated Diagram:")
-            st.graphviz_chart(graph.source)
+            st.session_state.conversion_result = result
+            st.session_state.conversion_graph  = graph
+            st.session_state.diagram_png_bytes = png_bytes
 
-            if png_bytes:
-                st.subheader("Download Diagram as PNG")
-                st.download_button(
-                    label="⬇️ Download (PNG)",
-                    data=png_bytes,
-                    file_name="diagram.png",
-                    mime="image/png"
-                )
+if 'conversion_result' in st.session_state and "diagram_png_bytes" in st.session_state:
+    st.subheader("Conversion Result:")
+    st.code(st.session_state.conversion_result, language="text")
+    st.subheader("Generated Diagram:")
+    st.graphviz_chart(st.session_state.conversion_graph.source)
+
+    if st.session_state.diagram_png_bytes:
+        st.subheader("Download Diagram as PNG")
+        st.download_button(
+            label="⬇️ Download (PNG)",
+            data=st.session_state.diagram_png_bytes,
+            file_name="diagram.png",
+            mime="image/png"
+        )
             
 
 if selected_model['name'] == "Regex-to-ε-NFA":
@@ -217,7 +231,6 @@ if selected_model['name'] == "Regex-to-ε-NFA":
                             "role": "assistant", 
                             "content": error_msg
                         })
-
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("Model Information")
