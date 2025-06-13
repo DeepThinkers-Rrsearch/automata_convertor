@@ -20,7 +20,6 @@ st.set_page_config(
     layout='wide'
 )
 
-# ----------------------- Prompts -------------------------------------------
 
 dfa_minimization_extraction_prompt = '''
 
@@ -41,7 +40,6 @@ Also no preembles in the output. Just the required output string
 
 '''
 
-# ───  Define available models as configuration objects ─────────────────────
 
 models_root = './models'
 models = [
@@ -63,11 +61,10 @@ if not valid_models:
     st.error("No valid models available.")
     st.stop()
 
-# ─── Sidebar dropdown with models ──────────────────────────────────────────
 model_names = [m["name"] for m in valid_models]
 selected_name = st.sidebar.selectbox('Choose Converter', model_names, index=0)
 
-# Get the selected model configuration
+
 selected_model = next(m for m in valid_models if m["name"] == selected_name)
 
 
@@ -114,8 +111,7 @@ img_input = None
 
 if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "NFA-to-DFA":
     img_input =  st.file_uploader("Upload image of DFA or NFA",type=['png','jpg','jpeg','svg'])
-    # if img_input:
-    #     input_img_bytes = img_input.read()
+    
 
 user_input = st.text_area("Input", placeholder=input_placeholder)
 
