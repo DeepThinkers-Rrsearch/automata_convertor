@@ -8,10 +8,10 @@ from utils.graphviz.graphviz_regex_to_e_nfa import epsilon_nfa_to_dot
 from utils.graphviz.graphviz_minimized_dfa import minimized_dfa_to_dot
 from utils.graphviz.graphviz_dfa import dfa_output_to_dot
 from utils.graphviz.graphviz_pda import pda_output_to_dot
-from llm import setup_llm
-from conversations import load_conversation_history
+from utils.llm import setup_llm
+from utils.conversations import load_conversation_history
 from langchain_core.messages import HumanMessage
-
+from utils.classes.regex_conversion_stack import RegexConversionStack
 
 
 st.set_page_config(
@@ -20,7 +20,7 @@ st.set_page_config(
     layout='wide'
 )
 
-# ----------------------- Prompts -------------------------------------------
+
 
 dfa_minimization_extraction_prompt = '''
 
@@ -41,7 +41,6 @@ Also no preembles in the output. Just the required output string
 
 '''
 
-# ───  Define available models as configuration objects ─────────────────────
 
 models_root = './models'
 models = [
@@ -63,12 +62,15 @@ if not valid_models:
     st.error("No valid models available.")
     st.stop()
 
-# ─── Sidebar dropdown with models ──────────────────────────────────────────
 model_names = [m["name"] for m in valid_models]
 selected_name = st.sidebar.selectbox('Choose Converter', model_names, index=0)
 
-# Get the selected model configuration
+
 selected_model = next(m for m in valid_models if m["name"] == selected_name)
+
+if selected_model['name'] == "Regex-to-ε-NFA":
+    if "regex_stack" not in st.session_state:
+        st.session_state.regex_stack = RegexConversionStack()
 
 
 def load_model(model_name: str):
@@ -94,15 +96,12 @@ def clear_on_convert():
         st.session_state.conversion_result = None
         st.session_state.conversion_graph = None
         st.session_state.diagram_png_bytes = None
-        st.session_state.input_regex = None
+        st.session_state.latest_input_regex = None
         st.session_state.regex_to_e_nfa_transition = None
         st.session_state.regex_to_e_nfa_used  = False
 
 
 st.session_state.pressed_once = False
-# -------------------------------  Main UI ------------------------------
-st.title("Automata Conversions")
-
 
 # Input area with dynamic placeholder based on selected model
 input_placeholder = {
@@ -117,25 +116,20 @@ img_input = None
 
 if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "NFA-to-DFA":
     img_input =  st.file_uploader("Upload image of DFA or NFA",type=['png','jpg','jpeg','svg'])
-    # if img_input:
-    #     input_img_bytes = img_input.read()
+    
 
 user_input = st.text_area("Input", placeholder=input_placeholder)
 
 if selected_model['name'] == "Regex-to-ε-NFA":
-    st.session_state.input_regex = user_input
+    st.session_state.latest_input_regex = user_input
 
 
 if st.button("Convert", type="primary"):
     if not user_input.strip():
         st.warning("Please enter something to convert.")
     else:
-        if st.session_state.pressed_once:
-            clear_on_convert()
-            
-
         with st.spinner(f"Converting using {selected_model['name']}..."):
-            st.session_state.pressed_once = True
+            
             model,stoi,itos = load_model(selected_model['name'])
             
             result = None
@@ -145,6 +139,10 @@ if st.button("Convert", type="primary"):
             if selected_model['name'] == "Regex-to-ε-NFA":
                 result = predict_regex_to_e_nfa(user_input,model,stoi,itos)
                 st.session_state.regex_to_e_nfa_transition = result
+                st.session_state.regex_stack.push(user_input,result)
+                st.session_state.is_pressed_convert = True
+                if "regex_to_e_nfa_used" in st.session_state: 
+                    st.session_state.regex_to_e_nfa_used = False
                 graph =epsilon_nfa_to_dot(result)
                 png_bytes = graph.pipe(format="png")
 
@@ -248,3 +246,6 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("**Thread ID:** abc123")
 if selected_model['name'] == "Regex-to-ε-NFA":
     st.sidebar.markdown(f"**Messages in conversation:** {len(st.session_state.messages)}")
+
+if selected_model['name'] == "Regex-to-ε-NFA": 
+    st.write(st.session_state.regex_stack.all_items())
