@@ -8,8 +8,8 @@ from utils.graphviz.graphviz_regex_to_e_nfa import epsilon_nfa_to_dot
 from utils.graphviz.graphviz_minimized_dfa import minimized_dfa_to_dot
 from utils.graphviz.graphviz_dfa import dfa_output_to_dot
 from utils.graphviz.graphviz_pda import pda_output_to_dot
-from llm import setup_llm
-from conversations import load_conversation_history
+from utils.llm import setup_llm
+from utils.conversations import load_conversation_history
 from langchain_core.messages import HumanMessage
 
 
@@ -100,9 +100,6 @@ def clear_on_convert():
 
 
 st.session_state.pressed_once = False
-# -------------------------------  Main UI ------------------------------
-st.title("Automata Conversions")
-
 
 # Input area with dynamic placeholder based on selected model
 input_placeholder = {
