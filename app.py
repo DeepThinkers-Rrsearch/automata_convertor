@@ -11,7 +11,7 @@ from utils.graphviz.graphviz_pda import pda_output_to_dot
 from utils.llm import setup_llm
 from utils.conversations import load_conversation_history
 from langchain_core.messages import HumanMessage
-
+from utils.classes.regex_conversion_stack import RegexConversionStack
 
 
 st.set_page_config(
@@ -19,6 +19,7 @@ st.set_page_config(
     page_icon='⚙️',
     layout='wide'
 )
+
 
 
 dfa_minimization_extraction_prompt = '''
@@ -67,6 +68,10 @@ selected_name = st.sidebar.selectbox('Choose Converter', model_names, index=0)
 
 selected_model = next(m for m in valid_models if m["name"] == selected_name)
 
+if selected_model['name'] == "Regex-to-ε-NFA":
+    if "regex_stack" not in st.session_state:
+        st.session_state.regex_stack = RegexConversionStack()
+
 
 def load_model(model_name: str):
 
@@ -91,7 +96,7 @@ def clear_on_convert():
         st.session_state.conversion_result = None
         st.session_state.conversion_graph = None
         st.session_state.diagram_png_bytes = None
-        st.session_state.input_regex = None
+        st.session_state.latest_input_regex = None
         st.session_state.regex_to_e_nfa_transition = None
         st.session_state.regex_to_e_nfa_used  = False
 
@@ -116,19 +121,15 @@ if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "NF
 user_input = st.text_area("Input", placeholder=input_placeholder)
 
 if selected_model['name'] == "Regex-to-ε-NFA":
-    st.session_state.input_regex = user_input
+    st.session_state.latest_input_regex = user_input
 
 
 if st.button("Convert", type="primary"):
     if not user_input.strip():
         st.warning("Please enter something to convert.")
     else:
-        if st.session_state.pressed_once:
-            clear_on_convert()
-            
-
         with st.spinner(f"Converting using {selected_model['name']}..."):
-            st.session_state.pressed_once = True
+            
             model,stoi,itos = load_model(selected_model['name'])
             
             result = None
@@ -138,6 +139,10 @@ if st.button("Convert", type="primary"):
             if selected_model['name'] == "Regex-to-ε-NFA":
                 result = predict_regex_to_e_nfa(user_input,model,stoi,itos)
                 st.session_state.regex_to_e_nfa_transition = result
+                st.session_state.regex_stack.push(user_input,result)
+                st.session_state.is_pressed_convert = True
+                if "regex_to_e_nfa_used" in st.session_state: 
+                    st.session_state.regex_to_e_nfa_used = False
                 graph =epsilon_nfa_to_dot(result)
                 png_bytes = graph.pipe(format="png")
 
@@ -241,3 +246,6 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("**Thread ID:** abc123")
 if selected_model['name'] == "Regex-to-ε-NFA":
     st.sidebar.markdown(f"**Messages in conversation:** {len(st.session_state.messages)}")
+
+if selected_model['name'] == "Regex-to-ε-NFA": 
+    st.write(st.session_state.regex_stack.all_items())
