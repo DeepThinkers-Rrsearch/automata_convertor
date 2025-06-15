@@ -14,6 +14,7 @@ from langchain_core.messages import HumanMessage
 from utils.classes.regex_conversion_stack import RegexConversionStack
 
 
+
 st.set_page_config(
     page_title='State Forge',
     page_icon='⚙️',
@@ -165,6 +166,8 @@ if st.button("Convert", type="primary"):
             st.session_state.conversion_graph  = graph
             st.session_state.diagram_png_bytes = png_bytes
 
+
+
 if 'conversion_result' in st.session_state and "diagram_png_bytes" in st.session_state:
     st.subheader("Conversion Result:")
     st.code(st.session_state.conversion_result, language="text")
@@ -241,11 +244,25 @@ if st.sidebar.button("Clear Chat History",type="secondary"):
     if selected_model['name'] == "Regex-to-ε-NFA":
         st.session_state.messages = []
         raise st.experimental_rerun()
+if st.sidebar.button("View your conversion history"):
+    @st.dialog("Conversion History")
+    def conversion_history():
+        st.write("Conversion History")
+        history = st.session_state.regex_stack.all_items()
+        if not history:
+            st.info("No conversions found yet.")
+            return
+        
+        for idx, item in enumerate(history[::-1], start=1):  # Show most recent first
+            st.markdown(f"### 🔢 Conversion {idx}")
+            st.markdown(f"**Regex:** `{item['regex']}`")
+            st.markdown("**Conversion Result:**")
+            st.code(item['conversion'], language='text')
+            st.markdown("---")
+    conversion_history()
+
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Thread ID:** abc123")
 if selected_model['name'] == "Regex-to-ε-NFA":
     st.sidebar.markdown(f"**Messages in conversation:** {len(st.session_state.messages)}")
 
-if selected_model['name'] == "Regex-to-ε-NFA": 
-    st.write(st.session_state.regex_stack.all_items())
