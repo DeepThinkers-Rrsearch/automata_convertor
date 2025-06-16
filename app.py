@@ -23,24 +23,7 @@ st.set_page_config(
 
 
 
-dfa_minimization_extraction_prompt = '''
 
-Here in this process you are a agent that extract an DFA transitons from the given input. You need to extract each and every relationships/transitions as it is. You should not miss any information. This is the sample outpust shouls looks like.
-
-"A: a-->A, b-->A; B: a-->B, b-->A; in:A; fi:A"
-
-Outpus is an string. Here Capital letters denotes the State names. Letter in double rounded circle is the final state. If any state has a arrow started with a dot, that is the initial state. 
-
-In above example, "in" denotes the initial states, "fi" represent final states.
-
-If there is more than one final states, those should be denoted using commas. As a example, "fi: D,E".
-
-Hint: for initial state, you can see a long arrow started with a dot.
-
-Also no preembles in the output. Just the required output string
-
-
-'''
 
 
 models_root = './models'
