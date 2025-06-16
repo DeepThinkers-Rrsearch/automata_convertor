@@ -4,6 +4,9 @@ from langchain_core.messages import HumanMessage,AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, MessagesState,StateGraph
 from prompt_templates.regex_to_e_nfa import regex_to_e_nfa_prompt_template
+import uuid
+
+
 
 def setup_llm():
     """
@@ -40,7 +43,8 @@ def setup_llm():
 
     memory = MemorySaver()
     app = workflow.compile(checkpointer=memory)
+    st.write()
 
-    config = {"configurable": {"thread_id":"abc123"}}
+    config = {"configurable": {"thread_id": str(uuid.uuid4())}}
 
     return app,config
