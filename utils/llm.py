@@ -4,6 +4,7 @@ from langchain_core.messages import HumanMessage,AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, MessagesState,StateGraph
 from prompt_templates.regex_to_e_nfa import regex_to_e_nfa_prompt_template
+from prompt_templates.e_nfa_to_dfa import e_nfa_to_dfa_prompt_template
 import uuid
 
 
@@ -30,6 +31,22 @@ def setup_llm():
         prompt = regex_to_e_nfa_prompt_template.invoke({ 
             "messages": state["messages"],
             "regex_to_e_nfa_hint": regex_to_e_nfa_hint
+            
+            })
+        
+        if ('e_nfa_to_dfa_used' not in st.session_state or st.session_state.e_nfa_to_dfa_used == False) and st.session_state.get('is_pressed_convert', False):
+            st.session_state.e_nfa_to_dfa_used = True
+            # st.write("debug start..........")
+            # st.write(st.session_state.get('input_e_nfa', ''))
+            # st.write(st.session_state.get('e_nfa_to_dfa_transition', ''))
+            # st.write("debug end..........")
+            e_nfa_to_dfa_hint = f"\nHere is the converted DFA transition for the e-NFA {st.session_state.get('latest_input_e_nfa', '')}:\n{st.session_state.get('e_nfa_to_dfa_transition', '')}"
+        else:
+            e_nfa_to_dfa_hint = ""
+        
+        prompt = e_nfa_to_dfa_prompt_template.invoke({ 
+            "messages": state["messages"],
+            "e_nfa_to_dfa_hint": e_nfa_to_dfa_hint
             
             })
         
