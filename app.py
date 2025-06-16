@@ -12,6 +12,7 @@ from utils.llm import setup_llm
 from utils.conversations import load_conversation_history
 from langchain_core.messages import HumanMessage
 from utils.classes.regex_conversion_stack import RegexConversionStack
+from utils.classes.e_nfa_conversion_stack import enfaConversionStack
 
 
 
@@ -56,6 +57,10 @@ if selected_model['name'] == "Regex-to-ε-NFA":
     if "regex_stack" not in st.session_state:
         st.session_state.regex_stack = RegexConversionStack()
 
+if selected_model['name'] == "e_NFA-to-DFA":
+    if "e_nfa_stack" not in st.session_state:
+        st.session_state.e_nfa_stack = enfaConversionStack()
+
 
 def load_model(model_name: str):
 
@@ -83,6 +88,9 @@ def clear_on_convert():
         st.session_state.latest_input_regex = None
         st.session_state.regex_to_e_nfa_transition = None
         st.session_state.regex_to_e_nfa_used  = False
+        st.session_state.latest_input_e_nfa = None
+        st.session_state.e_nfa_to_dfa_transition = None
+        st.session_state.e_nfa_to_dfa_used  = False
 
 
 st.session_state.pressed_once = False
@@ -107,6 +115,8 @@ user_input = st.text_area("Input", placeholder=input_placeholder)
 if selected_model['name'] == "Regex-to-ε-NFA":
     st.session_state.latest_input_regex = user_input
 
+if selected_model['name'] == "e_NFA-to-DFA":
+    st.session_state.latest_input_e_nfa = user_input
 
 if st.button("Convert", type="primary"):
     if not user_input.strip():
@@ -137,6 +147,11 @@ if st.button("Convert", type="primary"):
 
             elif selected_model['name'] == "e_NFA-to-DFA":
                 result = predict_e_nfa_to_dfa(model,user_input)
+                st.session_state.e_nfa_to_dfa_transition = result
+                st.session_state.e_nfa_stack.push(user_input,result)
+                st.session_state.is_pressed_convert = True
+                if "e_nfa_to_dfa_used" in st.session_state: 
+                    st.session_state.e_nfa_to_dfa_used = False
                 graph =dfa_output_to_dot(result)
                 png_bytes = graph.pipe(format="png")
 
@@ -167,7 +182,7 @@ if 'conversion_result' in st.session_state and "diagram_png_bytes" in st.session
         )
             
 
-if selected_model['name'] == "Regex-to-ε-NFA":
+if selected_model['name'] == "Regex-to-ε-NFA" or selected_model['name'] == "e_NFA-to-DFA":
     if 'app' not in st.session_state:
         st.session_state.app,st.session_state.config = setup_llm()
 
