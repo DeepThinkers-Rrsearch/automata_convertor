@@ -104,6 +104,7 @@ st.session_state.pressed_once = False
 input_placeholder = {
     "DFA-Minimization": "Enter your DFA description (states, transitions, etc.)",
     "Regex-to-ε-NFA": "Enter your regular expression",
+    "e_NFA-to-DFA": "Enter your ∈-NFA description",
     "PDA": "Enter your language example string...\nEg:- aabb (a^nb^n)"
     # Add more placeholders for other models
 }.get(selected_model['name'], "Enter your input here")
@@ -111,7 +112,7 @@ input_placeholder = {
 input_img_bytes = None
 img_input = None
 
-if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "NFA-to-DFA":
+if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "e_NFA-to-DFA":
     img_input =  st.file_uploader("Upload image of DFA or NFA",type=['png','jpg','jpeg','svg'])
     
 
