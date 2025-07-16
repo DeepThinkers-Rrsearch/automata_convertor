@@ -5,6 +5,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, MessagesState,StateGraph
 from prompt_templates.regex_to_e_nfa import regex_to_e_nfa_prompt_template
 from prompt_templates.e_nfa_to_dfa import e_nfa_to_dfa_prompt_template
+from prompt_templates.dfa_to_minimized_dfa import dfa_to_minimized_dfa_prompt_template
 import uuid
 
 
@@ -47,6 +48,22 @@ def setup_llm():
         prompt = e_nfa_to_dfa_prompt_template.invoke({ 
             "messages": state["messages"],
             "e_nfa_to_dfa_hint": e_nfa_to_dfa_hint
+            
+            })
+        
+        if ('dfa_to_minimized_dfa_used' not in st.session_state or st.session_state.dfa_to_minimized_dfa_used == False) and st.session_state.get('is_pressed_convert', False):
+            st.session_state.dfa_to_minimized_dfa_used = True
+            # st.write("debug start..........")
+            # st.write(st.session_state.get('input_regex', ''))
+            # st.write(st.session_state.get('regex_to_e_nfa_transition', ''))
+            # st.write("debug end..........")
+            dfa_to_minimized_dfa_hint = f"\nHere is the minimized DFA transition for the given DFA {st.session_state.get('latest_input_dfa', '')}:\n{st.session_state.get('dfa_to_minimized_dfa_transition', '')}"
+        else:
+            dfa_to_minimized_dfa_hint = ""
+        
+        prompt = dfa_to_minimized_dfa_prompt_template.invoke({ 
+            "messages": state["messages"],
+            "dfa_to_minimized_dfa_hint": dfa_to_minimized_dfa_hint
             
             })
         
