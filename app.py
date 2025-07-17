@@ -112,10 +112,10 @@ input_placeholder = {
 
 input_img_bytes = None
 img_input = None
+user_input = ""
 
 if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "e_NFA-to-DFA":
     img_input = st.file_uploader("Upload image of DFA or NFA", type=['png'])
-    user_input = ""  # Initialize default
 
     if img_input:
         with st.spinner("Extracting DFA transitions from image..."):
