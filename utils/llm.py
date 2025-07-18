@@ -77,8 +77,7 @@ def setup_llm():
 
 
         response = model.invoke(prompt)
-        st.write("prompt")
-        st.write(prompt)
+        
         if 'is_pressed_convert' in st.session_state:
             st.session_state.is_pressed_convert = False
         return {'messages':response}
