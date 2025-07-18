@@ -70,8 +70,8 @@ def setup_llm():
             pass
         else:
             prompt = dfa_to_minimized_dfa_prompt_template.invoke({ 
-            "messages": state["messages"],
-            "dfa_to_minimized_dfa_hint": dfa_to_minimized_dfa_hint
+                "messages": state["messages"],
+                "dfa_to_minimized_dfa_hint": dfa_to_minimized_dfa_hint
             })
 
 
