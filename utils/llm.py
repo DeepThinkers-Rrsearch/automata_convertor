@@ -29,11 +29,6 @@ def setup_llm():
         else:
             regex_to_e_nfa_hint = ""
         
-        prompt = regex_to_e_nfa_prompt_template.invoke({ 
-            "messages": state["messages"],
-            "regex_to_e_nfa_hint": regex_to_e_nfa_hint
-            
-            })
         
         if ('e_nfa_to_dfa_used' not in st.session_state or st.session_state.e_nfa_to_dfa_used == False) and st.session_state.get('is_pressed_convert', False):
             st.session_state.e_nfa_to_dfa_used = True
@@ -45,11 +40,6 @@ def setup_llm():
         else:
             e_nfa_to_dfa_hint = ""
         
-        prompt = e_nfa_to_dfa_prompt_template.invoke({ 
-            "messages": state["messages"],
-            "e_nfa_to_dfa_hint": e_nfa_to_dfa_hint
-            
-            })
         
         if ('dfa_to_minimized_dfa_used' not in st.session_state or st.session_state.dfa_to_minimized_dfa_used == False) and st.session_state.get('is_pressed_convert', False):
             st.session_state.dfa_to_minimized_dfa_used = True
@@ -61,13 +51,33 @@ def setup_llm():
         else:
             dfa_to_minimized_dfa_hint = ""
         
-        prompt = dfa_to_minimized_dfa_prompt_template.invoke({ 
-            "messages": state["messages"],
-            "dfa_to_minimized_dfa_hint": dfa_to_minimized_dfa_hint
-            
-            })
         
+        selected_model = st.session_state.selected_model
+
+        if selected_model['name'] == "Regex-to-ε-NFA":
+            prompt = regex_to_e_nfa_prompt_template.invoke({ 
+                "messages": state["messages"],
+                "regex_to_e_nfa_hint": regex_to_e_nfa_hint
+            })
+
+        elif selected_model['name'] == "e_NFA-to-DFA":
+            prompt = e_nfa_to_dfa_prompt_template.invoke({ 
+                "messages": state["messages"],
+                "e_nfa_to_dfa_hint": e_nfa_to_dfa_hint
+            })
+        elif selected_model['name'] == "PDA":
+            # Isuru should create a prompt for PDA
+            pass
+        else:
+            prompt = dfa_to_minimized_dfa_prompt_template.invoke({ 
+                "messages": state["messages"],
+                "dfa_to_minimized_dfa_hint": dfa_to_minimized_dfa_hint
+            })
+
+
+
         response = model.invoke(prompt)
+        
         if 'is_pressed_convert' in st.session_state:
             st.session_state.is_pressed_convert = False
         return {'messages':response}
