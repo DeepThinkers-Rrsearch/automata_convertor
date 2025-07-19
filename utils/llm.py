@@ -6,6 +6,7 @@ from langgraph.graph import START, MessagesState,StateGraph
 from prompt_templates.regex_to_e_nfa import regex_to_e_nfa_prompt_template
 from prompt_templates.e_nfa_to_dfa import e_nfa_to_dfa_prompt_template
 from prompt_templates.dfa_to_minimized_dfa import dfa_to_minimized_dfa_prompt_template
+from prompt_templates.push_down_automata import push_down_automata_prompt_template
 import uuid
 
 
@@ -64,6 +65,22 @@ def setup_llm():
         prompt = dfa_to_minimized_dfa_prompt_template.invoke({ 
             "messages": state["messages"],
             "dfa_to_minimized_dfa_hint": dfa_to_minimized_dfa_hint
+            
+            })
+        
+        if ('pda_used' not in st.session_state or st.session_state.pda_used == False) and st.session_state.get('is_pressed_convert', False):
+            st.session_state.pda_used = True
+            # st.write("debug start..........")
+            # st.write(st.session_state.get('input_regex', ''))
+            # st.write(st.session_state.get('regex_to_e_nfa_transition', ''))
+            # st.write("debug end..........")
+            push_down_automata_hint = f"\nHere is the converted pda transitions for the given context free language string {st.session_state.get('latest_input_pda', '')}:\n{st.session_state.get('pda_transition', '')}"
+        else:
+            push_down_automata_hint = ""
+        
+        prompt = push_down_automata_prompt_template.invoke({ 
+            "messages": state["messages"],
+            "push_down_automata_hint": push_down_automata_hint
             
             })
         

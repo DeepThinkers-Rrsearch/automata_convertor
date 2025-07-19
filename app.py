@@ -14,6 +14,7 @@ from langchain_core.messages import HumanMessage
 from utils.classes.regex_conversion_stack import RegexConversionStack
 from utils.classes.e_nfa_conversion_stack import enfaConversionStack
 from utils.classes.dfa_minimization_stack import DfaMinimizationStack
+from utils.classes.push_down_automata_stack import PushDownAutomataStack
 from e_nfa_image_to_text import extract_e_nfa_text_from_image
 
 
@@ -67,6 +68,10 @@ if selected_model['name'] == "DFA-Minimization":
     if "dfa_stack" not in st.session_state:
         st.session_state.dfa_stack = DfaMinimizationStack()
 
+if selected_model['name'] == "PDA":
+    if "pda_stack" not in st.session_state:
+        st.session_state.pda_stack = PushDownAutomataStack()
+
 
 def load_model(model_name: str):
 
@@ -97,6 +102,9 @@ def clear_on_convert():
         st.session_state.latest_input_e_nfa = None
         st.session_state.e_nfa_to_dfa_transition = None
         st.session_state.e_nfa_to_dfa_used  = False
+        st.session_state.latest_input_pda = None
+        st.session_state.pda_transition = None
+        st.session_state.pda_used  = False
 
 
 st.session_state.pressed_once = False
@@ -137,6 +145,9 @@ if selected_model['name'] == "e_NFA-to-DFA":
 
 if selected_model['name'] == "DFA-Minimization":
     st.session_state.latest_input_dfa = user_input
+
+if selected_model['name'] == "PDA":
+    st.session_state.latest_input_pda = user_input
 
 if st.button("Convert", type="primary"):
     if not user_input.strip():
@@ -182,6 +193,11 @@ if st.button("Convert", type="primary"):
 
             elif selected_model['name'] == "PDA":
                 result = predict_PDA_transitions(model,user_input)
+                st.session_state.pda_transition = result
+                st.session_state.pda_stack.push(user_input,result)
+                st.session_state.is_pressed_convert = True
+                if "pda_used" in st.session_state: 
+                    st.session_state.pda_used = False
                 graph =pda_output_to_dot(result)
                 png_bytes = graph.pipe(format="png")
             
@@ -207,7 +223,7 @@ if 'conversion_result' in st.session_state and "diagram_png_bytes" in st.session
         )
             
 
-if selected_model['name'] == "Regex-to-ε-NFA" or selected_model['name'] == "e_NFA-to-DFA" or selected_model['name'] == "DFA-Minimization":
+if selected_model['name'] == "Regex-to-ε-NFA" or selected_model['name'] == "e_NFA-to-DFA" or selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "PDA":
     if 'app' not in st.session_state:
         st.session_state.app,st.session_state.config = setup_llm()
 
@@ -270,6 +286,9 @@ if st.sidebar.button("Clear Chat History",type="secondary"):
     if selected_model['name'] == "DFA-Minimization":
         st.session_state.messages = []
         raise st.experimental_rerun()
+    if selected_model['name'] == "PDA":
+        st.session_state.messages = []
+        raise st.experimental_rerun()
 if st.sidebar.button("View your conversion history"):
     @st.dialog("Conversion History")
     def conversion_history():
@@ -310,6 +329,19 @@ if st.sidebar.button("View your conversion history"):
                 st.markdown("**Minimized DFA:**")
                 st.code(item['conversion'], language='text')
                 st.markdown("---")
+
+        elif selected_model['name'] == "PDA":
+            history = st.session_state.pda_stack.all_items()
+            if not history:
+                st.info("No conversions found yet.")
+                return
+            
+            for idx, item in enumerate(history[::-1], start=1):
+                st.markdown(f"### 🔢 Conversion {idx}")
+                st.markdown(f"**Context-Free Input String:** `{item['cf_string']}`")
+                st.markdown("**Conversion Result:**")
+                st.code(item['conversion'], language='text')
+                st.markdown("---")
     conversion_history()
 
 
@@ -317,5 +349,7 @@ st.sidebar.markdown("---")
 if selected_model['name'] == "Regex-to-ε-NFA":
     st.sidebar.markdown(f"**Messages in conversation:** {len(st.session_state.messages)}")
 if selected_model['name'] == "DFA-Minimization":
+    st.sidebar.markdown(f"**Messages in conversation:** {len(st.session_state.messages)}")
+if selected_model['name'] == "PDA":
     st.sidebar.markdown(f"**Messages in conversation:** {len(st.session_state.messages)}")
 
