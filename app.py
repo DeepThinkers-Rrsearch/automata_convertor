@@ -52,6 +52,7 @@ selected_name = st.sidebar.selectbox('Choose Converter', model_names, index=0)
 selected_model = next(m for m in valid_models if m["name"] == selected_name)
 st.session_state.selected_model = selected_model
 
+
 if selected_model['name'] == "Regex-to-ε-NFA":
     if "regex_stack" not in st.session_state:
         st.session_state.regex_stack = RegexConversionStack()
