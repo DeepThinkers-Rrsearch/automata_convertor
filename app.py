@@ -14,6 +14,8 @@ from langchain_core.messages import HumanMessage
 from utils.classes.regex_conversion_stack import RegexConversionStack
 from utils.classes.e_nfa_conversion_stack import enfaConversionStack
 from utils.classes.dfa_minimization_stack import DfaMinimizationStack
+from dfa_minimization_image_to_text import extract_dfa_text_from_image
+from e_nfa_image_to_text import extract_e_nfa_text_from_image
 
 
 
@@ -113,12 +115,32 @@ input_placeholder = {
 
 input_img_bytes = None
 img_input = None
+user_input = ""
 
-if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "e_NFA-to-DFA":
-    img_input =  st.file_uploader("Upload image of DFA or NFA",type=['png','jpg','jpeg','svg'])
+
+# if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "e_NFA-to-DFA":
+#     img_input =  st.file_uploader("Upload image of DFA or NFA",type=['png','jpg','jpeg','svg'])
     
 
-user_input = st.text_area("Input", placeholder=input_placeholder)
+# user_input = st.text_area("Input", placeholder=input_placeholder)
+
+user_input = ""
+if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "e_NFA-to-DFA":
+    img_input = st.file_uploader("Upload image of DFA or NFA", type=['png','jpg','jpeg','svg'])
+    if img_input:
+        with st.spinner("Extracting DFA transitions from image..."):
+            try:
+                image_bytes = img_input.read()
+                if selected_model['name'] == "DFA-Minimization":
+                    user_input = extract_dfa_text_from_image(image_bytes)
+                # elif selected_model['name'] == "e_NFA-to-DFA":
+                #     user_input = extract_e_nfa_text_from_image(image_bytes)
+                st.success("Text extracted from image successfully!")
+            except Exception as e:
+                st.error(f"Failed to extract text: {e}")
+    
+user_input = st.text_area("Input", placeholder=input_placeholder, value=user_input)
+
 
 if selected_model['name'] == "Regex-to-ε-NFA":
     st.session_state.latest_input_regex = user_input
