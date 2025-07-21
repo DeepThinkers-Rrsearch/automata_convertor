@@ -15,19 +15,14 @@ from utils.classes.regex_conversion_stack import RegexConversionStack
 from utils.classes.e_nfa_conversion_stack import enfaConversionStack
 from utils.classes.dfa_minimization_stack import DfaMinimizationStack
 from utils.classes.push_down_automata_stack import PushDownAutomataStack
-from e_nfa_image_to_text import extract_e_nfa_text_from_image
-
-
+from utils.text_extraction.dfa_minimization_image_to_text import extract_dfa_text_from_image
+from utils.text_extraction.e_nfa_image_to_text import extract_e_nfa_text_from_image
 
 st.set_page_config(
     page_title='State Forge',
     page_icon='⚙️',
     layout='wide'
 )
-
-
-
-
 
 
 models_root = './models'
@@ -123,20 +118,30 @@ input_img_bytes = None
 img_input = None
 user_input = ""
 
-if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "e_NFA-to-DFA":
-    img_input = st.file_uploader("Upload image of DFA or NFA", type=['png'])
 
+# if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "e_NFA-to-DFA":
+#     img_input =  st.file_uploader("Upload image of DFA or NFA",type=['png','jpg','jpeg','svg'])
+    
+
+# user_input = st.text_area("Input", placeholder=input_placeholder)
+
+user_input = ""
+if selected_model['name'] == "DFA-Minimization" or selected_model['name'] == "e_NFA-to-DFA":
+    img_input = st.file_uploader("Upload image of DFA or NFA", type=['png','jpg','jpeg','svg'])
     if img_input:
         with st.spinner("Extracting DFA transitions from image..."):
             try:
-                user_input = extract_e_nfa_text_from_image(img_input.read())
+                image_bytes = img_input.read()
+                if selected_model['name'] == "DFA-Minimization":
+                    user_input = extract_dfa_text_from_image(image_bytes)
+                elif selected_model['name'] == "e_NFA-to-DFA":
+                    user_input = extract_e_nfa_text_from_image(image_bytes)
                 st.success("Text extracted from image successfully!")
-                st.code(user_input, language='text')
             except Exception as e:
                 st.error(f"Failed to extract text: {e}")
     
 user_input = st.text_area("Input", placeholder=input_placeholder, value=user_input)
-# user_input = st.text_area("Input", placeholder=input_placeholder)
+
 
 if selected_model['name'] == "Regex-to-ε-NFA":
     st.session_state.latest_input_regex = user_input
@@ -287,6 +292,9 @@ if st.sidebar.button("Clear Chat History",type="secondary"):
     if selected_model['name'] == "DFA-Minimization":
         st.session_state.messages = []
         raise st.experimental_rerun()
+    if selected_model['name'] == "e_NFA-to-DFA":
+        st.session_state.messages = []
+        raise st.experimental_rerun()
     if selected_model['name'] == "PDA":
         st.session_state.messages = []
         raise st.experimental_rerun()
@@ -331,6 +339,19 @@ if st.sidebar.button("View your conversion history"):
                 st.code(item['conversion'], language='text')
                 st.markdown("---")
 
+        elif selected_model['name'] == "e_NFA-to-DFA":
+            history = st.session_state.e_nfa_stack.all_items()
+            if not history:
+                st.info("No conversions found yet.")
+                return
+            
+            for idx, item in enumerate(history[::-1], start=1):
+                st.markdown(f"### 🔢 Conversion {idx}")
+                st.markdown(f"**E NFA Input:** `{item['regex']}`")  # 'regex' is used as the key — rename later
+                st.markdown("**Converted DFA:**")
+                st.code(item['conversion'], language='text')
+                st.markdown("---")
+
         elif selected_model['name'] == "PDA":
             history = st.session_state.pda_stack.all_items()
             if not history:
@@ -353,4 +374,5 @@ if selected_model['name'] == "DFA-Minimization":
     st.sidebar.markdown(f"**Messages in conversation:** {len(st.session_state.messages)}")
 if selected_model['name'] == "PDA":
     st.sidebar.markdown(f"**Messages in conversation:** {len(st.session_state.messages)}")
-
+if selected_model['name'] == "e_NFA-to-DFA":
+    st.sidebar.markdown(f"**Messages in conversation:** {len(st.session_state.messages)}")
