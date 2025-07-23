@@ -335,7 +335,7 @@ if st.sidebar.button("View your conversion history"):
             
             for idx, item in enumerate(history[::-1], start=1):
                 st.markdown(f"### 🔢 Conversion {idx}")
-                st.markdown(f"**DFA Input:** `{item['regex']}`")  # 'regex' is used as the key — rename later
+                st.markdown(f"**DFA Input:** `{item['dfa']}`")  # 'regex' is used as the key — rename later
                 st.markdown("**Minimized DFA:**")
                 st.code(item['conversion'], language='text')
                 st.markdown("---")
@@ -348,7 +348,7 @@ if st.sidebar.button("View your conversion history"):
             
             for idx, item in enumerate(history[::-1], start=1):
                 st.markdown(f"### 🔢 Conversion {idx}")
-                st.markdown(f"**E NFA Input:** `{item['regex']}`")  # 'regex' is used as the key — rename later
+                st.markdown(f"**E NFA Input:** `{item['e-nfa']}`")  # 'regex' is used as the key — rename later
                 st.markdown("**Converted DFA:**")
                 st.code(item['conversion'], language='text')
                 st.markdown("---")
