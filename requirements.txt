@@ -4,6 +4,7 @@ numpy
 matplotlib
 pandas
 langchain-core 
-langgraph
+langgraph>0.2.27
 graphviz
 langchain-google-genai
+langchain
